@@ -47,7 +47,7 @@ def generate_images(fontSize, imageSize, dataPath, dataSize, fontFiles):
         os.makedirs("{}/{}".format(dataPath, idx), exist_ok=True)
         for i, path in enumerate(fontFiles):
             img = np.zeros(tuple(map(sum, zip(imageSize, (50, 50)))), np.uint8)
-            font = ImageFont.truetype((args.fonts + '\\' + path), fontSize)
+            font = ImageFont.truetype((args.fonts + '/' + path), fontSize)
             img_pil = Image.fromarray(img)
             draw = ImageDraw.Draw(img_pil)
             draw.text((20, -15), value, font=font, fill=255)

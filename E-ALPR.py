@@ -138,8 +138,8 @@ def predict_image(img, model=None):
     for i in range(len(digits)):
         try:
             resized = cv2.resize(square(digits[i]), (40, 40), interpolation=cv2.INTER_AREA)
-            if args.debug:
-                cv2.imshow(str(i), resized)
+            # if args.debug:
+                # cv2.imshow(str(i), resized)
             out = np.array(resized.ravel()[tf.newaxis, ...], dtype='f')
             result = model.predict(out)
             prediction[i] = {}
@@ -172,9 +172,9 @@ def mark(img):
     kernel = np.ones((3, 3), np.uint8)
     opening = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel, iterations=3 if img.shape[0] > 250 else 1)
 
-    if args.debug:
-        cv2.imshow("gray", gray)
-        cv2.imshow("opening", opening)
+    # if args.debug:
+        # cv2.imshow("gray", gray)
+        # cv2.imshow("opening", opening)
 
     # Finding characters
     cnt, he = cv2.findContours(opening, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
@@ -196,9 +196,9 @@ def mark(img):
     if len(chars) >= 1:
         for i, key in enumerate(sorted(chars.keys())):
             digits.append(chars[key])
-            if args.debug:
-                cv2.imshow(str(i), chars[key])
-        cv2.imshow("final", copy)
+            # if args.debug:
+                # cv2.imshow(str(i), chars[key])
+        # cv2.imshow("final", copy)
     return digits, copy
 
 
@@ -225,6 +225,7 @@ if __name__ == '__main__':
 
     elif args.image:
         cap = cv2.VideoCapture(args.image)
+        plateOutPut = args.image[:-4] + '_plate.jpg'
         outputFile = args.image[:-4] + '_out.jpg'
 
     else:
@@ -238,17 +239,18 @@ if __name__ == '__main__':
     if args.video or args.cam:
         vid_writer = cv2.VideoWriter(outputFile, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10, (frWidth, frHeight))
 
-    while cap and cv2.waitKey(1):
-        if cv2.waitKey(1) == ord('q'):
-            break
+    while cap:
+        # if cv2.waitKey(1) == ord('q'):
+        #     break
         # Get frame from the video
         hasFrame, frame = cap.read()
 
         # Stop the program if reached end of video
         if not hasFrame:
             print("Done processing !!!")
+            print("Output file is stored as " , plateOutPut)
             print("Output file is stored as ", outputFile)
-            cv2.waitKey(3000)  # I love you 3000 ^_^
+            # cv2.waitKey(3000)  # I love you 3000 ^_^
             break
 
         # Create a 4D blob from a frame.
@@ -259,19 +261,20 @@ if __name__ == '__main__':
         run = net.forward(getOutputsNames(net))
         # Remove the bounding boxes with low confidence
         rec, plateImg = postprocess(frame, run, confThreshold, nmsThreshold)
-        cv2.imshow("Capture", cv2.resize(frame, (400, 300)))
+        # cv2.imshow("Capture", cv2.resize(frame, (400, 300)))
         # If there's still a plate, recognize the characters
         if rec and plateImg is not None:
             out, final = predict_image(plateImg, model=MODEL)
             frame[0:final.shape[0], 0:final.shape[1], :] = final
             image = Image.fromarray(frame)
             draw = ImageDraw.Draw(image)
-            font = ImageFont.truetype('fonts/tradbdo.ttf', round(frWidth / 40))
+            font = ImageFont.truetype('Fonts/arefreg.ttf', round(frWidth / 40))
             draw.text((10, final.shape[0]+2), out, font=font, fill=(0, 255, 0, 0))
             frame = np.array(image)
 
         # Write the frame with the detection boxes
         if args.image:
+            cv2.imwrite(plateOutPut ,plateImg )
             cv2.imwrite(outputFile, frame.astype(np.uint8))
         else:
             vid_writer.write(frame.astype(np.uint8))
@@ -280,5 +283,5 @@ if __name__ == '__main__':
         vid_writer.release()
     if cap:
         cap.release()
-    cv2.waitKey()
-    cv2.destroyAllWindows()
+    # cv2.waitKey()
+    # cv2.destroyAllWindows()
